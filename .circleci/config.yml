@@ -30,7 +30,7 @@ jobs:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Run Login Module Unit Tests
-          command: ./gradlew :login:testDebugUnitTest
+          command: ./gradlew :SnackBars:testDebugUnitTest
       - save_cache:
           paths:
             - ~/.gradle
