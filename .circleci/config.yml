@@ -5,7 +5,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - run echo Aqsa
+      - run: brew install gradlew
       - run: chmod +x gradlew
       - run: ./gradlew build
       - run: ./gradlew test
