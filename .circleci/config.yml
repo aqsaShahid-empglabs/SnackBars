@@ -1,17 +1,45 @@
-version: 2
+version: 2.1
+
+orbs:
+  android: circleci/android@1.0.3
+
+references:
+  android_config: &android_config
+    executor:
+      name: android/android-machine
+      resource-class: large
+    environment:
+      # Configure the JVM and Gradle to avoid OOM errors
+      _JAVA_OPTIONS: "-Xmx4g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
+  #  android_dependencies: &android_dependencies
+  #    run:
+  #      name: Download Dependencies
+  #      command: ./gradlew androidDependencies
+  update_bundle: &update_bundle
+    run:
+      name: Bundle update
+      command: bundle update
 jobs:
   build:
-    docker:
-      - image: circleci/android:api-25-alpha
-    environment:
-      JVM_OPTS: -Xmx3200m
+    <<: *android_config
     steps:
       - checkout
       - restore_cache:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
-          name: Chmod permissions #if permission for Gradlew Dependencies fail, use this.
-          command: sudo chmod +x ./gradlew
+          name: Run Login Module Unit Tests
+          command: ./gradlew :login:testDebugUnitTest
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
-          name: Download Dependencies
-          command: ./gradlew androidDependencies
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
