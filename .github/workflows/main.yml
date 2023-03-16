@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  create-tag:
+  create-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,7 +20,16 @@ jobs:
         id: increment-tag-version
         run: echo "::set-output name=tag_version::$(echo ${{ steps.get-latest-tag.outputs.latest_tag }} | awk -F '.' '{print $1+1"."$2}')"
 
-      - name: Create tag
-        uses: git-actions/create-tag@v1
+      - name: Create release
+        id: create-release
+        uses: actions/create-release@v1
         with:
-          tag: ${{ steps.increment-tag-version.outputs.tag_version }}
+          tag_name: ${{ steps.increment-tag-version.outputs.tag_version }}
+          release_name: Release ${{ steps.increment-tag-version.outputs.tag_version }}
+          body: |
+            Release ${{ steps.increment-tag-version.outputs.tag_version }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
