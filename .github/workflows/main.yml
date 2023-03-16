@@ -6,26 +6,21 @@ on:
       - main
 
 jobs:
-  auto-increment-tag:
+  create-tag:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Git
-        run: |
-          git config --global user.email "aqsa.shahid@empglabs.com"
-          git config --global user.name "aqsaShahid-empglabs"
-      - name: Get Latest Tag
-        run: |
-          latest_tag=$(git describe --tags --abbrev=0)
-          echo "::set-output name=latest_tag::$latest_tag"
-        id: latest_tag
-      - name: Increment Tag
-        run: |
-          new_tag=$(echo ${{ steps.latest_tag.outputs.latest_tag }} | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-          echo "::set-output name=new_tag::$new_tag"
-        id: increment_tag
-      - name: Create Tag
-        run: |
-          git tag ${{ steps.increment_tag.outputs.new_tag }}
-          git push origin ${{ steps.increment_tag.outputs.new_tag }}
+
+      - name: Get latest tag
+        id: get-latest-tag
+        run: echo "::set-output name=latest_tag::$(git describe --tags --abbrev=0)"
+
+      - name: Increment tag version
+        id: increment-tag-version
+        run: echo "::set-output name=tag_version::$(echo ${{ steps.get-latest-tag.outputs.latest_tag }} | awk -F '.' '{print $1+1"."$2}')"
+
+      - name: Create tag
+        uses: git-actions/create-tag@v1
+        with:
+          tag: ${{ steps.increment-tag-version.outputs.tag_version }}
