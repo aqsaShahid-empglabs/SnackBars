@@ -38,7 +38,7 @@ jobs:
           prerelease: false
 
       - name: Trigger JitPack build
-        uses: appleboy/trigger-pipeline@master
+        uses: appleboy/trigger-pipeline@main
         with:
           url: 'https://jitpack.io/api/builds/github/aqsaShahid-empglabs/SnackBars/{ref}'
           ref: ${{ steps.inc_tag.outputs.tag }}
