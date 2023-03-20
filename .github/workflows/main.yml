@@ -68,3 +68,4 @@ jobs:
           update_odoo_module_version: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
