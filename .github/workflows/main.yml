@@ -38,7 +38,7 @@ jobs:
           TAG: ${{ steps.get_tag.outputs.tag }}
 
       - name: Publish to JitPack
-        uses: jakepurple13/JitPack-Publish@v1
+        uses: jitpack-io/action-jitpack@v1
         with:
           token: ${{ secrets.JITPACK_API_TOKEN }}
           group_id: com.snackbars
