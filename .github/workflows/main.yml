@@ -1,45 +1,48 @@
-name: Release on JitPack
+name: Publish to JitPack
 
 on:
   push:
     branches:
-      - main # Only run on the main branch
-
+      - main
 
 jobs:
-  release:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Set up JDK 8
-        uses: actions/setup-java@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: 11
 
       - name: Get latest tag
-        id: latest_tag
-        run: echo ::set-output name=tag::$(git describe --abbrev=0 --tags)
+        id: get_tag
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { data: tags } = await github.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            })
+            const latestTag = tags[0].name
+            return { tag: latestTag }
 
       - name: Increment tag
-        id: inc_tag
-        run: echo ::set-output name=tag::$(echo "${{ steps.latest_tag.outputs.tag }}" | awk -F. -v OFS=. '{++$NF}; print $0}')
+        id: increment_tag
+        run: echo "::set-output name=tag::$(echo ${TAG} | awk -F. '{$NF = $NF + 1;} 1' OFS=.)"
 
-      - name: Create tag
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.inc_tag.outputs.tag }}
-          release_name: Release ${{ steps.inc_tag.outputs.tag }}
-          body: Automatic release from Github Actions
-          draft: false
-          prerelease: false
+          TAG: ${{ steps.get_tag.outputs.tag }}
 
-      - name: Trigger JitPack build
-        uses: appleboy/trigger-pipeline@main
+      - name: Publish to JitPack
+        uses: jakepurple13/JitPack-Publish@v1
         with:
-          url: 'https://jitpack.io/api/builds/github/aqsaShahid-empglabs/SnackBars/{ref}'
-          ref: ${{ steps.inc_tag.outputs.tag }}
           token: ${{ secrets.JITPACK_API_TOKEN }}
+          group_id: com.snackbars
+          artifact_id: snackbars
+          version: ${{ steps.increment_tag.outputs.tag }}
+          publish_sources: true
+          release_notes: "Release notes for ${GITHUB_REF}"
